@@ -1,6 +1,7 @@
 "use client";
+import { AiFillWarning } from "react-icons/ai";
 import Image from "next/image";
-import { Oi } from "next/font/google";
+import { Mouse_Memoirs } from "next/font/google";
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -16,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSocketContext } from "@/context/SocketContext";
 import { io } from "socket.io-client";
 import { Progress } from "@/components/ui/progress";
-const oi = Oi({ subsets: ["latin"], weight: "400" });
+const oi = Mouse_Memoirs({ subsets: ["latin"], weight: "400" });
 function Hero() {
   const [progress, setProgress] = useState(5);
   const { mysocket, setmysocket } = useSocketContext();
@@ -58,6 +59,9 @@ function Hero() {
   }, []);
   async function RegisterHandler() {
     setError("");
+    if (!username || !password) {
+      return setError("Fill all fields");
+    }
     const res = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND}/api/register`,
       { email: mail, username, password }
@@ -75,6 +79,9 @@ function Hero() {
   }
   async function loginHandler() {
     setError("");
+    if (!username || !password) {
+      return setError("Fill all fields");
+    }
     const res = await axios.post(
       `${process.env.NEXT_PUBLIC_BACKEND}/api/login`,
       {
@@ -100,7 +107,7 @@ function Hero() {
       {loading ? (
         <div>
           <div>
-            <h1 className="w-full text-center text-blue-900  pt-6 text-3xl lg:text-7xl">
+            <h1 className="w-full text-center text-blue-900  pt-6 text-8xl lg:text-7xl">
               <span className={oi.className}>Cam Chat</span>
             </h1>
             <h2 className="w-full text-center  text-white bordered-text lg:text-4xl">
@@ -128,7 +135,7 @@ function Hero() {
         <div>
           <div className="flex justify-around pt-3 flex-col sm:flex-row">
             <Image src={"/dino.png"} alt="logo" height={200} width={200} />
-            <div className="bordered-text text-6xl">
+            <div className="bordered-text text-9xl sm:w-full md:w-fit text-center">
               <span className={`${oi.className} mt-9`}>Cam Chat</span>
             </div>
           </div>
@@ -166,6 +173,18 @@ function Hero() {
                             placeholder="Password"
                             className="w-fit rounded-full p-1 mx-auto border-2 border-sky-600"
                           />
+                          <div>
+                            {error ? (
+                              <div className="w-fit mx-auto text-black bg-yellow-500 pl-2 pr-2 rounded-md border-2 border-black flex flex-row gap-1">
+                                <span className=" text-xl">
+                                  <AiFillWarning />
+                                </span>{" "}
+                                {error}
+                              </div>
+                            ) : (
+                              <div></div>
+                            )}
+                          </div>
                           <button
                             onClick={loginHandler}
                             className="bg-blue-500 w-fit mx-auto p-1 rounded-lg border-2 border-black text-black"
@@ -175,29 +194,46 @@ function Hero() {
                         </span>
                       </TabsContent>
                       <TabsContent value="register">
-                        <span className="flex flex-col gap-2">
+                        <span className="flex flex-col gap-2 bg-sky-300 rounded-lg p-1">
                           <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Username"
-                            className="w-fit"
+                            className="w-fit rounded-full p-1 mx-auto border-2 border-sky-600"
                           />
                           <input
                             type="email"
                             value={mail}
                             onChange={(e) => setMail(e.target.value)}
                             placeholder="Email"
-                            className="w-fit"
+                            className="w-fit rounded-full p-1 mx-auto border-2 border-sky-600"
                           />
                           <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            className="w-fit rounded-full p-1 mx-auto border-2 border-sky-600"
                             placeholder="Password"
-                            className="w-fit"
                           />
-                          <button onClick={RegisterHandler}>Login</button>
+                          <div>
+                            {error ? (
+                              <div className="w-fit mx-auto text-black bg-yellow-500 pl-2 pr-2 rounded-md border-2 border-black flex flex-row gap-1">
+                                <span className=" text-xl">
+                                  <AiFillWarning />
+                                </span>{" "}
+                                {error}
+                              </div>
+                            ) : (
+                              <div></div>
+                            )}
+                          </div>
+                          <button
+                            className="bg-blue-500 w-fit mx-auto p-1 rounded-lg border-2 border-black text-black"
+                            onClick={RegisterHandler}
+                          >
+                            Regiser
+                          </button>
                         </span>
                       </TabsContent>
                     </Tabs>

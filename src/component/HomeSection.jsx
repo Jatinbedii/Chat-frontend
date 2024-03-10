@@ -9,7 +9,7 @@ function HomeSection() {
   return (
     <div>
       {user ? (
-        <div className="flex justify-center">
+        <div>
           <AllUsers />
         </div>
       ) : (
