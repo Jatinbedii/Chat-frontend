@@ -17,18 +17,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSocketContext } from "@/context/SocketContext";
 import { io } from "socket.io-client";
 import { Progress } from "@/components/ui/progress";
-import { usePeerContext } from "@/context/PeerContext";
+import { ClipLoader } from "react-spinners";
 const oi = Mouse_Memoirs({ subsets: ["latin"], weight: "400" });
 function Hero() {
   const [progress, setProgress] = useState(5);
   const { mysocket, setmysocket } = useSocketContext();
-  const { setmypeer, mypeer } = usePeerContext();
   const { user, setUser } = useUserContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [mail, setMail] = useState("");
   const [loading, setLoading] = useState(true);
+  const [actionloading, setactionloading] = useState(false);
   async function VerifyJwt() {
     const res = await axios(`${process.env.NEXT_PUBLIC_BACKEND}/api/user`, {
       headers: {
@@ -61,7 +61,9 @@ function Hero() {
   }, []);
   async function RegisterHandler() {
     setError("");
+    setactionloading(true);
     if (!username || !password) {
+      setactionloading(false);
       return setError("Fill all fields");
     }
     const res = await axios.post(
@@ -73,15 +75,19 @@ function Hero() {
       const socket = io(process.env.NEXT_PUBLIC_BACKEND);
       socket.emit("registerid", { id: res.data.user._id });
       setmysocket(socket);
+      setactionloading(false);
       setUser(res.data.user);
       localStorage.setItem("jwt", res.data.jwt);
     } else {
+      setactionloading(false);
       setError(res.data.error);
     }
   }
   async function loginHandler() {
     setError("");
+    setactionloading(true);
     if (!username || !password) {
+      setactionloading(false);
       return setError("Fill all fields");
     }
     const res = await axios.post(
@@ -97,9 +103,11 @@ function Hero() {
       socket.emit("registerid", { id: res.data.user._id });
       setmysocket(socket);
 
+      setactionloading(false);
       setUser(res.data.user);
       localStorage.setItem("jwt", res.data.jwt);
     } else {
+      setactionloading(false);
       setError(res.data.error);
     }
   }
@@ -187,12 +195,18 @@ function Hero() {
                               <div></div>
                             )}
                           </div>
-                          <button
-                            onClick={loginHandler}
-                            className="bg-blue-500 w-fit mx-auto p-1 rounded-lg border-2 border-black text-black"
-                          >
-                            Login
-                          </button>
+                          {actionloading ? (
+                            <div className="w-full flex justify-center">
+                              <ClipLoader color="white" size={30} />
+                            </div>
+                          ) : (
+                            <button
+                              onClick={loginHandler}
+                              className="bg-blue-500 w-fit mx-auto p-1 rounded-lg border-2 border-black text-black"
+                            >
+                              Login
+                            </button>
+                          )}
                         </span>
                       </TabsContent>
                       <TabsContent value="register">
@@ -230,12 +244,18 @@ function Hero() {
                               <div></div>
                             )}
                           </div>
-                          <button
-                            className="bg-blue-500 w-fit mx-auto p-1 rounded-lg border-2 border-black text-black"
-                            onClick={RegisterHandler}
-                          >
-                            Regiser
-                          </button>
+                          {actionloading ? (
+                            <div className="w-full flex justify-center">
+                              <ClipLoader color="white" size={30} />
+                            </div>
+                          ) : (
+                            <button
+                              className="bg-blue-500 w-fit mx-auto p-1 rounded-lg border-2 border-black text-black"
+                              onClick={RegisterHandler}
+                            >
+                              Regiser
+                            </button>
+                          )}
                         </span>
                       </TabsContent>
                     </Tabs>

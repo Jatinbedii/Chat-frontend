@@ -86,9 +86,9 @@ function Page({ params }) {
     }
   }
   useEffect(() => {
-    // if (!user && !mysocket) {
-    // router.push("/");
-    //  }
+    if (!user && !mysocket) {
+      router.push("/");
+    }
   }, []);
   useEffect(() => {
     getUserInfo();
