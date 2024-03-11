@@ -17,10 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSocketContext } from "@/context/SocketContext";
 import { io } from "socket.io-client";
 import { Progress } from "@/components/ui/progress";
+import { usePeerContext } from "@/context/PeerContext";
 const oi = Mouse_Memoirs({ subsets: ["latin"], weight: "400" });
 function Hero() {
   const [progress, setProgress] = useState(5);
   const { mysocket, setmysocket } = useSocketContext();
+  const { setmypeer, mypeer } = usePeerContext();
   const { user, setUser } = useUserContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

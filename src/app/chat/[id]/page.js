@@ -1,4 +1,8 @@
 "use client";
+import { PiVideoCameraFill } from "react-icons/pi";
+import { BiSolidSend } from "react-icons/bi";
+import { FaImage } from "react-icons/fa6";
+import { MdEmojiEmotions } from "react-icons/md";
 import { RiSendPlane2Fill } from "react-icons/ri";
 import Image from "next/image";
 import { IoMdArrowRoundBack } from "react-icons/io";
@@ -7,13 +11,27 @@ import { useUserContext } from "@/context/UserContext";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Picker from "emoji-picker-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ClipLoader } from "react-spinners";
 function Page({ params }) {
+  const router = useRouter();
   const chatref = useRef(null);
   const { user } = useUserContext();
   const { mysocket } = useSocketContext();
   const [chat, setChat] = useState([]);
+  const [sendingImage, setSendingImage] = useState(false);
   const [message, setMessage] = useState("");
   const [userinfo, setuserinfo] = useState();
+  const [img, setimg] = useState();
   async function getUserInfo() {
     const res = await axios(
       `${process.env.NEXT_PUBLIC_BACKEND}/api/singleuser/${params.id}`
@@ -24,6 +42,54 @@ function Page({ params }) {
 
     setuserinfo(res.data);
   }
+  async function SendImage() {
+    if (!img) {
+      return;
+    }
+    setSendingImage(true);
+    const data = new FormData();
+    data.append("file", img);
+    data.append("upload_preset", "videoapp");
+    data.append("cloud_name", "dur15pcjs");
+    try {
+      const res = await axios.post(
+        "https://api.cloudinary.com/v1_1/dur15pcjs/image/upload",
+        data
+      );
+      const res2 = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND}/api/sendimage`,
+        { type: "image", to: params.id, message: res.data.secure_url },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        }
+      );
+      setChat((oldchat) => [
+        ...oldchat,
+        {
+          message: res.data.secure_url,
+          to: params.id,
+          from: user._id,
+          type: "image",
+        },
+      ]);
+      mysocket.emit("personalmessage", {
+        message: res.data.secure_url,
+        to: params.id,
+        from: user._id,
+        type: "image",
+      });
+      setSendingImage(false);
+    } catch {
+      setSendingImage(false);
+    }
+  }
+  useEffect(() => {
+    // if (!user && !mysocket) {
+    // router.push("/");
+    //  }
+  }, []);
   useEffect(() => {
     getUserInfo();
   }, []);
@@ -70,10 +136,11 @@ function Page({ params }) {
       message,
       to: params.id,
       from: user._id,
+      type: "text",
     });
     setChat((oldchat) => [
       ...oldchat,
-      { message, to: params.id, from: user._id },
+      { message, to: params.id, from: user._id, type: "text" },
     ]);
     const temp = message;
     setMessage("");
@@ -92,26 +159,32 @@ function Page({ params }) {
     <div className="min-h-screen bg-sky-300">
       <div className="w-full bg-blue-900 fixed">
         {userinfo ? (
-          <div className="flex flex-row gap-2 p-1">
-            <Link href="/" className="text-white text-3xl h-full my-auto">
-              <IoMdArrowRoundBack />
-            </Link>
+          <div className="p-1 flex justify-between md:pr-10 md:pl-10">
+            <div className="flex flex-row gap-1">
+              <Link href="/" className="text-white text-3xl h-full my-auto">
+                <IoMdArrowRoundBack />
+              </Link>
 
-            <Image
-              className="rounded-full border-white border-2"
-              alt="profile"
-              src={userinfo.profile}
-              height={50}
-              width={50}
-            />
+              <Image
+                className="rounded-full border-white border-2"
+                alt="profile"
+                src={userinfo.profile}
+                height={50}
+                width={50}
+              />
 
-            <div className="flex flex-col pl-2 ">
-              <div className="text-white">@{userinfo.username}</div>
-              <div className="text-gray-400">{userinfo.email}</div>
+              <div className="flex flex-col pl-2 ">
+                <div className="text-white">@{userinfo.username}</div>
+                <div className="text-gray-400">{userinfo.email}</div>
+              </div>
             </div>
+
+            <PiVideoCameraFill className="text-white  text-4xl mt-2" />
           </div>
         ) : (
-          <div>Loading</div>
+          <div className="flex justify-center p-2">
+            <ClipLoader size={35} color="white" />
+          </div>
         )}
       </div>
       <div className="h-screen">
@@ -130,17 +203,65 @@ function Page({ params }) {
               <div
                 className={`${
                   singlechat.from === params.id
-                    ? "bg-white rounded-t-lg rounded-br-lg p-2 inline-block max-w-xs m-1 md:max-w-md"
-                    : "bg-yellow-200 rounded-t-lg p-2 rounded-bl-lg inline-block max-w-xs m-1 md:max-w-md"
+                    ? "bg-white rounded-t-lg rounded-br-lg  inline-block max-w-xs m-1 md:max-w-md"
+                    : "bg-yellow-200 rounded-t-lg  rounded-bl-lg  inline-block m-1 max-w-xs md:max-w-md"
                 }`}
               >
-                {singlechat.message}
+                {singlechat.type == "text" ? (
+                  <p className="p-2 w-full">{singlechat.message}</p>
+                ) : (
+                  <img src={singlechat.message} className="p-1 w-full" />
+                )}
               </div>
             </div>
           ))}
-          <div className="w-full h-[60px] bg-sky-300"></div>
+          <div className="w-full h-[70px] bg-sky-300"></div>
         </div>
-
+        <div className="fixed bottom-10 w-full flex justify-center gap-3">
+          <Dialog>
+            <DialogTrigger>
+              <FaImage className="text-yellow-400 bg-black rounded-sm text-3xl  " />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Send Image</DialogTitle>
+                <DialogDescription>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setimg(e.target.files[0])}
+                    className="rounded-3xl bg-sky-300 p-1"
+                  />
+                  {sendingImage ? (
+                    <ClipLoader loading="true" size={20} />
+                  ) : (
+                    <BiSolidSend
+                      className="text-blue text-3xl"
+                      onClick={SendImage}
+                    />
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger>
+              <MdEmojiEmotions className="text-yellow-400 bg-black rounded-full text-3xl  " />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Select Emoji</DialogTitle>
+                <DialogDescription>
+                  <Picker
+                    onEmojiClick={(emoji) => {
+                      setMessage(message + emoji.emoji);
+                    }}
+                  />
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </div>
         <div className=" fixed bottom-0 w-full flex justify-center gap-1">
           <input
             type="text"

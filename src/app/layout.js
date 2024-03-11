@@ -2,6 +2,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { UserContextProvider } from "@/context/UserContext";
 import { SocketContextProvider } from "@/context/SocketContext";
+import { PeerContextProvider } from "@/context/PeerContext";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -15,7 +16,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={outfit.className}>
         <UserContextProvider>
-          <SocketContextProvider>{children}</SocketContextProvider>
+          <SocketContextProvider>
+            <PeerContextProvider>{children}</PeerContextProvider>
+          </SocketContextProvider>
         </UserContextProvider>
       </body>
     </html>
