@@ -10,16 +10,22 @@ import { useSocketContext } from "@/context/SocketContext";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 import { usePathname } from "next/navigation";
+import { ToastAction } from "@/components/ui/toast";
+import Peer from "peerjs";
 
 const oi = Mouse_Memoirs({ weight: "400", subsets: ["latin"] });
 
 function AllUsers() {
+  const mycamreference = useRef(null);
+  const hiscamreference = useRef(null);
+  const [showincomingcall, setshowincomingcall] = useState(false);
   const path = usePathname();
   const { toast } = useToast();
   const { mysocket } = useSocketContext();
   const { user } = useUserContext();
   const [users, setUsers] = useState([]);
   const userRef = useRef(null);
+  const callinguser = useRef(null);
 
   async function getUsers() {
     try {
@@ -30,7 +36,21 @@ function AllUsers() {
       console.log(error);
     }
   }
+  async function call(peerid) {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    mycamreference.current.srcObject = stream;
+    const mypeer = new Peer();
+    mypeer.on("open", (id) => {
+      const call = mypeer.call(peerid, stream);
 
+      call.on("stream", (remotestream) => {
+        hiscamreference.current.srcObject = remotestream;
+      });
+    });
+  }
   useEffect(() => {
     if (mysocket && path === "/") {
       const handlePersonalMessage = (data) => {
@@ -45,6 +65,23 @@ function AllUsers() {
       };
 
       mysocket.on("personalmessage", handlePersonalMessage);
+      mysocket.on("callcoming", ({ from, peerid }) => {
+        toast({
+          title: "Call incoming",
+          description: ".",
+          action: (
+            <ToastAction
+              altText="answer"
+              onClick={(e) => {
+                setshowincomingcall(true);
+                call(peerid);
+              }}
+            >
+              answer
+            </ToastAction>
+          ),
+        });
+      });
 
       return () => {
         mysocket.off("personalmessage", handlePersonalMessage);
@@ -77,6 +114,14 @@ function AllUsers() {
             </div>
           </nav>
           <Toaster />
+          {showincomingcall ? (
+            <div className="z-50 absolute h-[300px] w-[300px]  top-0 bg-white">
+              <video className="max-w-[300px]" autoPlay ref={mycamreference} />
+              <video className="max-w-[300px]" autoPlay ref={hiscamreference} />
+            </div>
+          ) : (
+            <span></span>
+          )}
           <div className="bg-sky-300 min-h-screen">
             <div className="pt-[50px] max-w-[300px] 2 mx-auto">
               {users.map((singleUser) => {

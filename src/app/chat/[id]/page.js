@@ -1,4 +1,7 @@
 "use client";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/components/ui/use-toast";
+
 import { PiVideoCameraFill } from "react-icons/pi";
 import { BiSolidSend } from "react-icons/bi";
 import { FaImage } from "react-icons/fa6";
@@ -22,16 +25,24 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ClipLoader } from "react-spinners";
+import Peer from "peerjs";
 function Page({ params }) {
+  const [peer, setpeer] = useState();
+  const { toast } = useToast();
   const router = useRouter();
   const chatref = useRef(null);
   const { user } = useUserContext();
   const { mysocket } = useSocketContext();
   const [chat, setChat] = useState([]);
+  const [mystream, setmystream] = useState();
   const [sendingImage, setSendingImage] = useState(false);
   const [message, setMessage] = useState("");
   const [userinfo, setuserinfo] = useState();
+  const [showcallscreen, setshowcallscreen] = useState(false);
   const [img, setimg] = useState();
+
+  const myvidref = useRef(null);
+  const hisvidref = useRef(null);
   async function getUserInfo() {
     const res = await axios(
       `${process.env.NEXT_PUBLIC_BACKEND}/api/singleuser/${params.id}`
@@ -42,6 +53,38 @@ function Page({ params }) {
 
     setuserinfo(res.data);
   }
+  async function callhandler() {
+    setshowcallscreen(true);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    if (!stream) {
+      setshowcallscreen(false);
+      return;
+    }
+    const myPeer = new Peer();
+    setpeer(myPeer);
+
+    setmystream(stream);
+    myPeer.on("open", (id) => {
+      mysocket.emit("call", { to: params.id, from: user._id, peerid: id });
+    });
+    if (myvidref.current) {
+      myvidref.current.srcObject = stream;
+    }
+  }
+  useEffect(() => {
+    if (peer) {
+      peer.on("call", (call) => {
+        call.answer(mystream);
+        call.on("stream", (remotestream) => {
+          hisvidref.current.srcObject = remotestream;
+        });
+      });
+    }
+  }, [peer]);
   async function SendImage() {
     if (!img) {
       return;
@@ -104,6 +147,13 @@ function Page({ params }) {
         if (data.to == user._id && data.from == params.id) {
           setChat((oldchat) => [...oldchat, data]);
         }
+      });
+      mysocket.on("offline", () => {
+        setshowcallscreen(false);
+        toast({
+          title: "OFFLINE",
+          description: "User is offline",
+        });
       });
     }
   }, [mysocket]);
@@ -179,7 +229,10 @@ function Page({ params }) {
               </div>
             </div>
 
-            <PiVideoCameraFill className="text-white  text-4xl mt-2" />
+            <PiVideoCameraFill
+              className="text-white  text-4xl mt-2"
+              onClick={callhandler}
+            />
           </div>
         ) : (
           <div className="flex justify-center p-2">
@@ -187,6 +240,15 @@ function Page({ params }) {
           </div>
         )}
       </div>
+      {showcallscreen ? (
+        <div className="z-50 relative w-[300px]  top-0 bg-white">
+          <video className="min-w-[100px] " ref={myvidref} autoPlay />
+          <video className="min-w-[100px] " ref={hisvidref} autoPlay />
+        </div>
+      ) : (
+        <span></span>
+      )}
+      <Toaster />
       <div className="h-screen">
         <div
           className="max-w-[1200px] bg-sky-300 mx-auto h-screen overflow-y-auto"
