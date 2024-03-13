@@ -1,4 +1,5 @@
 "use client";
+import { FaPhoneAlt } from "react-icons/fa";
 
 import { useUserContext } from "@/context/UserContext";
 import axios from "axios";
@@ -65,7 +66,11 @@ function AllUsers() {
           description: data.message,
         });
       };
-
+      mysocket.on("callcut", () => {
+        mycamreference.current = null;
+        hiscamreference.current = null;
+        setshowincomingcall(null);
+      });
       mysocket.on("personalmessage", handlePersonalMessage);
       mysocket.on("callcoming", ({ from, peerid }) => {
         toast({
@@ -117,9 +122,25 @@ function AllUsers() {
           </nav>
           <Toaster />
           {showincomingcall ? (
-            <div className="z-50 absolute h-[300px] w-[300px]  top-0 bg-white">
-              <video className="max-w-[300px]" autoPlay ref={mycamreference} />
-              <video className="max-w-[300px]" autoPlay ref={hiscamreference} />
+            <div className="z-50 absolute w-full top-0">
+              <div className=" w-[300px]  mx-auto bg-white border-2 border-black p-2 rounded-lg">
+                <div className="w-fit mx-auto">Video call</div>
+                <video
+                  className="max-w-[60px] mb-1 rounded-md border-2 border-blue-900 bg-black"
+                  autoPlay
+                  ref={mycamreference}
+                />
+                <video
+                  className="max-w-[280px] rounded-lg border-2 border-blue-900 bg-black"
+                  autoPlay
+                  ref={hiscamreference}
+                />
+                <div className="w-full flex justify-center pt-1">
+                  <button className="text-red-500 ">
+                    <FaPhoneAlt />
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <span></span>

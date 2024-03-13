@@ -1,4 +1,6 @@
 "use client";
+import { FaPhoneAlt } from "react-icons/fa";
+
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -52,6 +54,14 @@ function Page({ params }) {
     }
 
     setuserinfo(res.data);
+  }
+  async function cutcall() {
+    setpeer(null);
+    myvidref.current = null;
+    hisvidref.current = null;
+    setmystream(null);
+    setshowcallscreen(null);
+    mysocket.emit("callcut", { to: params.id });
   }
   async function callhandler() {
     if (typeof window !== "undefined") {
@@ -243,9 +253,25 @@ function Page({ params }) {
         )}
       </div>
       {showcallscreen ? (
-        <div className="z-50 relative w-[300px]  top-0 bg-white">
-          <video className="min-w-[100px] " ref={myvidref} autoPlay />
-          <video className="min-w-[100px] " ref={hisvidref} autoPlay />
+        <div className="z-50 relative w-full top-0">
+          <div className=" w-[300px]  mx-auto bg-white border-2 border-black p-2 rounded-lg">
+            <div className="w-fit mx-auto">Video call</div>
+            <video
+              className="max-w-[60px] mb-1 rounded-md border-2 border-blue-900 bg-black"
+              ref={myvidref}
+              autoPlay
+            />
+            <video
+              className="max-w-[280px] rounded-lg border-2 border-blue-900 bg-black"
+              ref={hisvidref}
+              autoPlay
+            />
+            <div className="w-full flex justify-center pt-1">
+              <button className="text-red-500 ">
+                <FaPhoneAlt onClick={cutcall} />
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <span></span>
