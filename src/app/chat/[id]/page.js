@@ -167,6 +167,12 @@ function Page({ params }) {
           description: "User is offline",
         });
       });
+      mysocket.on("callcutfromclient", () => {
+        setmystream(false);
+        hisvidref.current = false;
+        myvidref.current = false;
+        setshowcallscreen(false);
+      });
     }
   }, [mysocket]);
   const handleMessageChange = (event) => {

@@ -10,23 +10,20 @@ import { Mouse_Memoirs } from "next/font/google";
 import { useSocketContext } from "@/context/SocketContext";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ToastAction } from "@/components/ui/toast";
 import Peer from "peerjs";
 
 const oi = Mouse_Memoirs({ weight: "400", subsets: ["latin"] });
 
 function AllUsers() {
-  const mycamreference = useRef(null);
-  const hiscamreference = useRef(null);
-  const [showincomingcall, setshowincomingcall] = useState(false);
+  const router = useRouter();
   const path = usePathname();
   const { toast } = useToast();
   const { mysocket } = useSocketContext();
   const { user } = useUserContext();
   const [users, setUsers] = useState([]);
   const userRef = useRef(null);
-  const callinguser = useRef(null);
 
   async function getUsers() {
     try {
@@ -37,23 +34,7 @@ function AllUsers() {
       console.log(error);
     }
   }
-  async function call(peerid) {
-    if (typeof window !== "undefined") {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      mycamreference.current.srcObject = stream;
-      const mypeer = new Peer();
-      mypeer.on("open", (id) => {
-        const call = mypeer.call(peerid, stream);
 
-        call.on("stream", (remotestream) => {
-          hiscamreference.current.srcObject = remotestream;
-        });
-      });
-    }
-  }
   useEffect(() => {
     if (mysocket && path === "/") {
       const handlePersonalMessage = (data) => {
@@ -66,11 +47,7 @@ function AllUsers() {
           description: data.message,
         });
       };
-      mysocket.on("callcut", () => {
-        mycamreference.current = null;
-        hiscamreference.current = null;
-        setshowincomingcall(null);
-      });
+
       mysocket.on("personalmessage", handlePersonalMessage);
       mysocket.on("callcoming", ({ from, peerid }) => {
         toast({
@@ -80,8 +57,7 @@ function AllUsers() {
             <ToastAction
               altText="answer"
               onClick={(e) => {
-                setshowincomingcall(true);
-                call(peerid);
+                router.push(`/videocall/${peerid}`);
               }}
             >
               answer
@@ -121,30 +97,6 @@ function AllUsers() {
             </div>
           </nav>
           <Toaster />
-          {showincomingcall ? (
-            <div className="z-50 absolute w-full top-0">
-              <div className=" w-[300px]  mx-auto bg-white border-2 border-black p-2 rounded-lg">
-                <div className="w-fit mx-auto">Video call</div>
-                <video
-                  className="max-w-[60px] mb-1 rounded-md border-2 border-blue-900 bg-black"
-                  autoPlay
-                  ref={mycamreference}
-                />
-                <video
-                  className="max-w-[280px] rounded-lg border-2 border-blue-900 bg-black"
-                  autoPlay
-                  ref={hiscamreference}
-                />
-                <div className="w-full flex justify-center pt-1">
-                  <button className="text-red-500 ">
-                    <FaPhoneAlt />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <span></span>
-          )}
           <div className="bg-sky-300 min-h-screen">
             <div className="pt-[50px] max-w-[300px] 2 mx-auto">
               {users.map((singleUser) => {
