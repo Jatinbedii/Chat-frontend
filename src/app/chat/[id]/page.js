@@ -54,25 +54,27 @@ function Page({ params }) {
     setuserinfo(res.data);
   }
   async function callhandler() {
-    setshowcallscreen(true);
+    if (typeof window !== "undefined") {
+      setshowcallscreen(true);
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    if (!stream) {
-      setshowcallscreen(false);
-      return;
-    }
-    const myPeer = new Peer();
-    setpeer(myPeer);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      if (!stream) {
+        setshowcallscreen(false);
+        return;
+      }
+      const myPeer = new Peer();
+      setpeer(myPeer);
 
-    setmystream(stream);
-    myPeer.on("open", (id) => {
-      mysocket.emit("call", { to: params.id, from: user._id, peerid: id });
-    });
-    if (myvidref.current) {
-      myvidref.current.srcObject = stream;
+      setmystream(stream);
+      myPeer.on("open", (id) => {
+        mysocket.emit("call", { to: params.id, from: user._id, peerid: id });
+      });
+      if (myvidref.current) {
+        myvidref.current.srcObject = stream;
+      }
     }
   }
   useEffect(() => {

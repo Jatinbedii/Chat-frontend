@@ -37,19 +37,21 @@ function AllUsers() {
     }
   }
   async function call(peerid) {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
-    mycamreference.current.srcObject = stream;
-    const mypeer = new Peer();
-    mypeer.on("open", (id) => {
-      const call = mypeer.call(peerid, stream);
-
-      call.on("stream", (remotestream) => {
-        hiscamreference.current.srcObject = remotestream;
+    if (typeof window !== "undefined") {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
       });
-    });
+      mycamreference.current.srcObject = stream;
+      const mypeer = new Peer();
+      mypeer.on("open", (id) => {
+        const call = mypeer.call(peerid, stream);
+
+        call.on("stream", (remotestream) => {
+          hiscamreference.current.srcObject = remotestream;
+        });
+      });
+    }
   }
   useEffect(() => {
     if (mysocket && path === "/") {
