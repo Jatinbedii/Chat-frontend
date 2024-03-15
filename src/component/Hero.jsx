@@ -293,6 +293,14 @@ function Hero() {
                 fosters genuine connections through its combination of
                 text-based conversations and one-on-one video calls, redefining
                 the way people interact and communicate online.
+                <div className="w-full text-center">For testing</div>
+                <div className="w-full text-center">
+                  <span className="text-orange-400">ID</span> test , jatin ,
+                  dino , bedi
+                </div>
+                <div className="w-full text-center mb-3">
+                  <span className="text-orange-400">Password</span> 123
+                </div>
               </div>
               <div className="w-full h-[20px] bg-blue-900 rounded-b-full"></div>
             </div>
